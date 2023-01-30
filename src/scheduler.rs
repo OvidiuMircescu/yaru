@@ -2,6 +2,7 @@ use crate::schedtask;
 enum TaskState{
     Waiting,
     Ready,
+    Running,
     Done
 }
 
@@ -36,19 +37,21 @@ impl WorkOnTask{
         matches!(self.state, TaskState::Done)
     }
 
-    pub fn set_done(&mut self){
+    pub fn run(&mut self){
+        self.state = TaskState::Running;
+        self.task.run();
         self.state = TaskState::Done;
         for obs in &self.observers{
-            obs.borrow_mut().notify_from(&self);
+            obs.borrow_mut().notify(&self);
         }
     }
 
     pub fn register(&mut self, task:&WorkOnTaskRef){
         self.observers.push(task.clone());
-        task.borrow_mut().notify_from(&self);
+        task.borrow_mut().notify(&self);
     }
 
-    pub fn notify_from(&mut self, from:&WorkOnTask){
+    pub fn notify(&mut self, from:&WorkOnTask){
         if from.is_done(){
             self.number_of_dependencies -= 1;
             if self.number_of_dependencies == 0{
@@ -104,10 +107,9 @@ impl Scheduler{
                 break
             }
             for task in ready_tasks{
-                task.borrow_mut().task.run();
-                task.borrow_mut().set_done();
+                task.borrow_mut().run();
                 waiting_tasks.retain(|x| !std::rc::Rc::ptr_eq(x,&task));
-             }
+            }
         }
     }
 }

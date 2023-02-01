@@ -1,4 +1,4 @@
-use crate::schedtask;
+use crate::generaltask;
 enum TaskState{
     Waiting,
     Ready,
@@ -8,7 +8,7 @@ enum TaskState{
 
 pub type TaskId = usize;
 struct WorkOnTask{
-    task : Box<dyn schedtask::SchedTask>,
+    task : Box<dyn generaltask::GeneralTask>,
     // id : TaskId,
     number_of_dependencies : usize,
     observers : Vec<WorkOnTaskRef>,
@@ -17,7 +17,7 @@ struct WorkOnTask{
 
 type WorkOnTaskRef = std::rc::Rc<std::cell::RefCell<WorkOnTask>>;
 impl WorkOnTask{
-    pub fn new(task : Box<dyn schedtask::SchedTask>)-> WorkOnTask{
+    pub fn new(task : Box<dyn generaltask::GeneralTask>)-> WorkOnTask{
         let number_of_dependencies = task.dependencies().len();
         WorkOnTask{
             task,
@@ -75,7 +75,7 @@ impl Scheduler{
         }
     }
 
-    pub fn submit(&mut self, task : Box<dyn schedtask::SchedTask>) -> TaskId{
+    pub fn submit(&mut self, task : Box<dyn generaltask::GeneralTask>) -> TaskId{
         let id = self.last_id;
         self.last_id += 1;
         let dependencies: Vec<WorkOnTaskRef> = task.dependencies()

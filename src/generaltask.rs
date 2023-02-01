@@ -1,5 +1,5 @@
 use crate::scheduler::TaskId;
-pub trait SchedTask{
+pub trait GeneralTask{
     fn run(&mut self);
 
     fn dependencies(&self) -> &Vec<TaskId>;
@@ -19,7 +19,7 @@ impl SimpleTask
     }
 }
 
-impl SchedTask for SimpleTask
+impl GeneralTask for SimpleTask
 {
     fn run(&mut self){
         (self.callback)();

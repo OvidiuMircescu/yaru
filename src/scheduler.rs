@@ -1,69 +1,12 @@
 use crate::generaltask;
-enum TaskState{
-    Waiting,
-    Ready,
-    Running,
-    Done
-}
+
+mod scheduledtask;
+use scheduledtask::*;
 
 pub type TaskId = usize;
-struct WorkOnTask{
-    task : Box<dyn generaltask::GeneralTask>,
-    // id : TaskId,
-    number_of_dependencies : usize,
-    observers : Vec<WorkOnTaskRef>,
-    state : TaskState
-}
-
-type WorkOnTaskRef = std::rc::Rc<std::cell::RefCell<WorkOnTask>>;
-impl WorkOnTask{
-    pub fn new(task : Box<dyn generaltask::GeneralTask>)-> WorkOnTask{
-        let number_of_dependencies = task.dependencies().len();
-        WorkOnTask{
-            task,
-            // id,
-            number_of_dependencies,
-            observers : Vec::new(),
-            state : if number_of_dependencies == 0 {TaskState::Ready}
-                    else {TaskState::Waiting}
-        }
-    }
-
-    pub fn is_ready(&self)->bool{
-        matches!(self.state, TaskState::Ready)
-    }
-
-    pub fn is_done(&self)->bool{
-        matches!(self.state, TaskState::Done)
-    }
-
-    pub fn run(&mut self){
-        self.state = TaskState::Running;
-        self.task.run();
-        self.state = TaskState::Done;
-        for obs in &self.observers{
-            obs.borrow_mut().notify(&self);
-        }
-    }
-
-    pub fn register(&mut self, task:&WorkOnTaskRef){
-        self.observers.push(task.clone());
-        task.borrow_mut().notify(&self);
-    }
-
-    pub fn notify(&mut self, from:&WorkOnTask){
-        if from.is_done(){
-            self.number_of_dependencies -= 1;
-            if self.number_of_dependencies == 0{
-                self.state = TaskState::Ready;
-            }
-        }
-    }
-}
-
 
 pub struct Scheduler{
-    all_tasks : std::collections::HashMap<TaskId, WorkOnTaskRef>,
+    all_tasks : std::collections::HashMap<TaskId, ScheduledTaskRef>,
     last_id : TaskId,
 }
 
@@ -78,12 +21,12 @@ impl Scheduler{
     pub fn submit(&mut self, task : Box<dyn generaltask::GeneralTask>) -> TaskId{
         let id = self.last_id;
         self.last_id += 1;
-        let dependencies: Vec<WorkOnTaskRef> = task.dependencies()
+        let dependencies: Vec<ScheduledTaskRef> = task.dependencies()
             .iter()
             .filter_map(|x|self.all_tasks.get(x))
             .map(|x| x.clone())
             .collect();
-        let new_task =WorkOnTask::new(task) ;
+        let new_task =ScheduledTask::new(task) ;
         let new_task = std::rc::Rc::new(std::cell::RefCell::new(new_task));
         self.all_tasks.insert(id, new_task.clone());
         for task in dependencies.iter(){
@@ -93,12 +36,12 @@ impl Scheduler{
     }
 
     pub fn start(&mut self){
-        let mut waiting_tasks: Vec<WorkOnTaskRef>  = self.all_tasks.values()
+        let mut waiting_tasks: Vec<ScheduledTaskRef>  = self.all_tasks.values()
                     .filter(|x| !x.borrow().is_done())
                     .cloned()
                     .collect();
         while !waiting_tasks.is_empty() {
-            let ready_tasks : Vec<WorkOnTaskRef> = waiting_tasks.iter()
+            let ready_tasks : Vec<ScheduledTaskRef> = waiting_tasks.iter()
                     .filter(|x| x.borrow().is_ready())
                     .cloned()
                     .collect();

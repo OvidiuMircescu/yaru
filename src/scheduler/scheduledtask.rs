@@ -7,15 +7,42 @@ pub enum TaskState{
     Done
 }
 
+pub trait Observer {
+    fn notify(&mut self, from:&TaskState);
+}
+
+
+pub type ScheduledTaskRef = std::rc::Rc<std::cell::RefCell<ScheduledTask>>;
+pub struct DependencyObserver{
+    observer : ScheduledTaskRef,
+    // subject : ScheduledTaskRef
+}
+
+impl DependencyObserver{
+    pub fn new(observer: ScheduledTaskRef,
+        //    subject : ScheduledTaskRef
+          )->DependencyObserver{
+        DependencyObserver {
+            observer,
+            //  subject
+        }
+    }
+}
+
+impl Observer for DependencyObserver{
+    fn notify(&mut self, from:&TaskState) {
+        self.observer.borrow_mut().notify_from_dependency(from)
+    }
+}
+
 pub struct ScheduledTask{
     task : Box<dyn generaltask::GeneralTask>,
     // id : TaskId,
     number_of_dependencies : usize,
-    observers : Vec<ScheduledTaskRef>,
+    observers : Vec<Box <dyn Observer>>,
     state : TaskState
 }
 
-pub type ScheduledTaskRef = std::rc::Rc<std::cell::RefCell<ScheduledTask>>;
 impl ScheduledTask{
     pub fn new(task : Box<dyn generaltask::GeneralTask>)-> ScheduledTask{
         let number_of_dependencies = task.dependencies().len();
@@ -29,7 +56,7 @@ impl ScheduledTask{
         }
     }
 
-    pub fn is_ready(&self)->bool{
+/*    pub fn is_ready(&self)->bool{
         matches!(self.state, TaskState::Ready)
     }
 
@@ -37,26 +64,48 @@ impl ScheduledTask{
         matches!(self.state, TaskState::Done)
     }
 
+     pub fn get_state(&self)-> &TaskState{
+        &self.state
+    }
+ */
     pub fn run(&mut self){
         self.state = TaskState::Running;
         self.task.run();
         self.state = TaskState::Done;
-        for obs in &self.observers{
-            obs.borrow_mut().notify(&self);
+        self.notify_observers();
+    }
+
+    pub fn register(&mut self, mut obs: Box <dyn Observer>){
+        obs.notify(&self.state);
+        self.observers.push(obs);
+    }
+
+    fn notify_observers(&mut self){
+        for obs in &mut self.observers{
+            obs.notify(&self.state);
         }
     }
 
-    pub fn register(&mut self, task:&ScheduledTaskRef){
-        self.observers.push(task.clone());
-        task.borrow_mut().notify(&self);
-    }
-
-    pub fn notify(&mut self, from:&ScheduledTask){
-        if from.is_done(){
-            self.number_of_dependencies -= 1;
-            if self.number_of_dependencies == 0{
-                self.state = TaskState::Ready;
-            }
+    fn notify_from_dependency(&mut self, state_from:&TaskState){
+        match state_from{
+            TaskState::Done => {
+                self.number_of_dependencies -= 1;
+                if self.number_of_dependencies == 0{
+                    self.state = TaskState::Ready;
+                    self.notify_observers();
+                }
+            },
+            _ => ()
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // use super::*;
+    #[test]
+    fn test_build()
+    {
+
     }
 }

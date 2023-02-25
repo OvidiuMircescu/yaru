@@ -3,6 +3,7 @@ mod scheduler;
 
 pub use scheduler::Scheduler;
 pub use task_declaration::SimpleTask;
+pub use scheduler::TaskInfo;
 
 #[cfg(test)]
 mod tests {

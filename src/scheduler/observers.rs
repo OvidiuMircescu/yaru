@@ -14,7 +14,7 @@ impl DependencyObserver{
 
 impl Observer for DependencyObserver{
     fn notify(&mut self, from:&TaskState) {
-        self.observer.borrow_mut().notify_from_dependency(from)
+        self.observer.borrow_mut().notify_from_dependency(from);
     }
 }
 

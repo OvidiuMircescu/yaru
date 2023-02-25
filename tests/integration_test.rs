@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 
-fn newtask(message:&str, deps:&[usize], clown:&Rc<RefCell<String>>, sched:&mut newsched::Scheduler ) ->usize{
+fn newtask(message:&str, deps:&[newsched::TaskInfo], clown:&Rc<RefCell<String>>, sched:&mut newsched::Scheduler ) ->newsched::TaskInfo{
     let clown = clown.clone();
     let message = String::from(message);
     let func = move || clown.borrow_mut().push_str(&message);
@@ -9,7 +9,7 @@ fn newtask(message:&str, deps:&[usize], clown:&Rc<RefCell<String>>, sched:&mut n
     sched.submit(Box::new(task))
 }
 
-fn newtask_vec(message:&str, deps:&[usize], clown:&Rc<RefCell<Vec<String>>>, sched:&mut newsched::Scheduler ) ->usize{
+fn newtask_vec(message:&str, deps:&[newsched::TaskInfo], clown:&Rc<RefCell<Vec<String>>>, sched:&mut newsched::Scheduler ) ->newsched::TaskInfo{
     let clown = clown.clone();
     let message = String::from(message);
     let func = move || clown.borrow_mut().push(String::from(&message));
@@ -73,33 +73,32 @@ fn chain(){
     let mut sched = newsched::Scheduler::new();
 
     let start = String::from("start task\n");
-    let mut idx = newtask_vec(&start, &[], &result, &mut sched);
-    let start_task_id = idx;
+    let start_task_id = newtask_vec(&start, &[], &result, &mut sched);
     let mut deps = Vec::new();
 
     // first set of tasks depending on start
     let mut exp_set1 = Vec::new();
-    for _ in 1..=3{
-        let message = format!("first set task {}\n", idx);
+    for it in 1..=3{
+        let message = format!("first set task {}\n", it);
         exp_set1.push(message.clone());
-        idx = newtask_vec(&message, &[start_task_id], &result, &mut sched);
-        deps.push(idx);
+        let info = newtask_vec(&message, &[start_task_id.clone()], &result, &mut sched);
+        deps.push(info);
     }
 
     // middle set of tasks depending on first set
     let mut middleset = Vec::new();
-    for _ in 1..=3{
-        let message = format!("depends on first set task {}\n", idx);
+    for it in 4..=6{
+        let message = format!("depends on first set task {}\n", it);
         middleset.push(message.clone());
-        idx = newtask_vec(&message, &deps, &result, &mut sched);
+        newtask_vec(&message, &deps, &result, &mut sched);
     }
 
     // second of tasks set depending on start
     let mut exp_set2 = Vec::new();
-    for _ in 1..=3{
-        let message = format!("second set task {}\n", idx);
+    for it in 7..=9{
+        let message = format!("second set task {}\n", it);
         exp_set2.push(message.clone());
-        idx = newtask_vec(&message, &[start_task_id], &result, &mut sched);
+        newtask_vec(&message, &[start_task_id.clone()], &result, &mut sched);
     }
 
     sched.start();

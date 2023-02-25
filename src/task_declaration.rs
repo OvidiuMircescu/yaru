@@ -1,21 +1,21 @@
-use crate::scheduler::TaskId;
+use crate::scheduler::TaskInfo;
 pub trait TaskDeclaration{
     fn run(&mut self);
 
-    fn dependencies(&self) -> &Vec<TaskId>;
+    fn dependencies(&self) -> &Vec<TaskInfo>;
 }
 
 type CallbackFunc = Box<dyn Fn()>;
 pub struct SimpleTask
 {
-    deps : Vec<TaskId>,
+    deps : Vec<TaskInfo>,
     callback : CallbackFunc
 }
 
 impl SimpleTask
 {
-    pub fn new(deps: &[TaskId], callback : CallbackFunc) -> Self {
-        SimpleTask {deps : deps.to_owned(), callback}
+    pub fn new(deps: &[TaskInfo], callback : CallbackFunc) -> Self {
+        SimpleTask {deps : deps.to_vec(), callback}
     }
 }
 
@@ -25,7 +25,7 @@ impl TaskDeclaration for SimpleTask
         (self.callback)();
     }
 
-    fn dependencies(&self) -> &Vec<TaskId> {
+    fn dependencies(&self) -> &Vec<TaskInfo> {
         &self.deps
     }
 }

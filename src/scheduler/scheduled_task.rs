@@ -7,6 +7,17 @@ pub enum TaskState{
     Done
 }
 
+impl std::fmt::Display for TaskState{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self{
+            TaskState::Waiting => write!(f, "Waiting"),
+            TaskState::Ready   => write!(f, "Ready"),
+            TaskState::Running => write!(f, "Running"),
+            TaskState::Done    => write!(f, "Done"),
+        }
+    }
+}
+
 pub trait Observer {
     fn notify(&mut self, from:&TaskState);
 }

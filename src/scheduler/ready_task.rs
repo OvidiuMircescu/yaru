@@ -20,19 +20,24 @@ impl ReadyTasksManager{
 pub type ReadyTasksManagerRef = std::rc::Rc<std::cell::RefCell<ReadyTasksManager>>;
 pub struct ReadyTaskObserver{
     manager : ReadyTasksManagerRef,
-    subject_task : ScheduledTaskRef
+    subject_task : ScheduledTaskWeakRef
 }
 
 impl ReadyTaskObserver{
     pub fn new(manager:ReadyTasksManagerRef, subject_task:ScheduledTaskRef)-> ReadyTaskObserver{
-        ReadyTaskObserver{manager,subject_task}
+        ReadyTaskObserver{
+            manager,
+            subject_task: std::rc::Rc::downgrade(&subject_task)
+        }
     }
 }
 
 impl Observer for ReadyTaskObserver{
     fn notify(&mut self, from_state:&TaskState) {
         match from_state{
-            TaskState::Ready => self.manager.borrow_mut().add(self.subject_task.clone()),
+            TaskState::Ready => if let Some(obs) = self.subject_task.upgrade(){
+                                        self.manager.borrow_mut().add(obs)
+                                },
             _ => ()
         }
     }

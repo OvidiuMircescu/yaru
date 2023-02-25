@@ -40,5 +40,6 @@ mod tests {
         let obs = Box::new(TestObserver{state :state.clone()});
         info.register(obs);
         assert_eq!("Ready", state.borrow().as_str());
+        let _cln = info.clone();
     }
 }

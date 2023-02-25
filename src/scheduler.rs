@@ -58,9 +58,19 @@ impl Scheduler{
 
 #[cfg(test)]
 mod tests {
-    // use super::*;
+    use super::*;
+    use crate::SimpleTask;
     #[test]
-    fn test_build()
+    fn test_memory()
     {
+        let simptask = SimpleTask::new(&[], Box::new(|| println!("hehe!")));
+        let mut sched = Scheduler::new();
+        sched.submit(Box::new(simptask));
+        assert_eq!(1, sched.all_tasks.len());
+        sched.start();
+        assert_eq!(1, sched.all_tasks.len());
+        for t in sched.all_tasks.values(){
+            assert_eq!(1, std::rc::Rc::strong_count(t));
+        }
     }
 }

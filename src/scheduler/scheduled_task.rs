@@ -23,6 +23,7 @@ pub trait Observer {
 }
 
 pub type ScheduledTaskRef = std::rc::Rc<std::cell::RefCell<ScheduledTask>>;
+pub type ScheduledTaskWeakRef = std::rc::Weak<std::cell::RefCell<ScheduledTask>>;
 pub struct ScheduledTask{
     task : Box<dyn task_declaration::TaskDeclaration>,
     // id : TaskId,

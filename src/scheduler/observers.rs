@@ -1,20 +1,22 @@
 use super::scheduled_task::*;
 
 pub struct DependencyObserver{
-    observer : ScheduledTaskRef,
+    observer : ScheduledTaskWeakRef,
 }
 
 impl DependencyObserver{
     pub fn new(observer: ScheduledTaskRef)->DependencyObserver{
         DependencyObserver {
-            observer,
+            observer : std::rc::Rc::downgrade(&observer)
         }
     }
 }
 
 impl Observer for DependencyObserver{
     fn notify(&mut self, from:&TaskState) {
-        self.observer.borrow_mut().notify_from_dependency(from);
+        if let Some(obs) = self.observer.upgrade(){
+            obs.borrow_mut().notify_from_dependency(from);
+        }
     }
 }
 

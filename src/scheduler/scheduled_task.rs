@@ -1,4 +1,4 @@
-use crate::generaltask;
+use crate::task_declaration;
 
 pub enum TaskState{
     Waiting,
@@ -11,32 +11,9 @@ pub trait Observer {
     fn notify(&mut self, from:&TaskState);
 }
 
-
 pub type ScheduledTaskRef = std::rc::Rc<std::cell::RefCell<ScheduledTask>>;
-pub struct DependencyObserver{
-    observer : ScheduledTaskRef,
-    // subject : ScheduledTaskRef
-}
-
-impl DependencyObserver{
-    pub fn new(observer: ScheduledTaskRef,
-        //    subject : ScheduledTaskRef
-          )->DependencyObserver{
-        DependencyObserver {
-            observer,
-            //  subject
-        }
-    }
-}
-
-impl Observer for DependencyObserver{
-    fn notify(&mut self, from:&TaskState) {
-        self.observer.borrow_mut().notify_from_dependency(from)
-    }
-}
-
 pub struct ScheduledTask{
-    task : Box<dyn generaltask::GeneralTask>,
+    task : Box<dyn task_declaration::TaskDeclaration>,
     // id : TaskId,
     number_of_dependencies : usize,
     observers : Vec<Box <dyn Observer>>,
@@ -44,7 +21,7 @@ pub struct ScheduledTask{
 }
 
 impl ScheduledTask{
-    pub fn new(task : Box<dyn generaltask::GeneralTask>)-> ScheduledTask{
+    pub fn new(task : Box<dyn task_declaration::TaskDeclaration>)-> ScheduledTask{
         let number_of_dependencies = task.dependencies().len();
         ScheduledTask{
             task,
@@ -56,18 +33,6 @@ impl ScheduledTask{
         }
     }
 
-/*    pub fn is_ready(&self)->bool{
-        matches!(self.state, TaskState::Ready)
-    }
-
-    pub fn is_done(&self)->bool{
-        matches!(self.state, TaskState::Done)
-    }
-
-     pub fn get_state(&self)-> &TaskState{
-        &self.state
-    }
- */
     pub fn run(&mut self){
         self.state = TaskState::Running;
         self.task.run();
@@ -86,7 +51,7 @@ impl ScheduledTask{
         }
     }
 
-    fn notify_from_dependency(&mut self, state_from:&TaskState){
+    pub fn notify_from_dependency(&mut self, state_from:&TaskState){
         match state_from{
             TaskState::Done => {
                 self.number_of_dependencies -= 1;

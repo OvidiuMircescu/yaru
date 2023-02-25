@@ -1,8 +1,8 @@
-mod generaltask;
+mod task_declaration;
 mod scheduler;
 
 pub use scheduler::Scheduler;
-pub use generaltask::SimpleTask;
+pub use task_declaration::SimpleTask;
 
 #[cfg(test)]
 mod tests {

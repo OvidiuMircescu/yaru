@@ -1,48 +1,15 @@
-use crate::generaltask;
+use super::task_declaration;
 
-mod scheduledtask;
-use scheduledtask::*;
+mod scheduled_task;
+use scheduled_task::*;
+
+mod observers;
+use observers::*;
+
+mod ready_task;
+use ready_task::*;
 
 pub type TaskId = usize;
-pub type ScheduledTaskRef = std::rc::Rc<std::cell::RefCell<ScheduledTask>>;
-
-struct ReadyTasksManager{
-    ready_tasks : Vec<ScheduledTaskRef>
-}
-
-impl ReadyTasksManager{
-    fn new() -> ReadyTasksManager{
-        ReadyTasksManager{ ready_tasks : Vec::new()}
-    }
-
-    fn take(&mut self)->Vec<ScheduledTaskRef>{
-        std::mem::take(&mut self.ready_tasks)
-    }
-
-    fn add(&mut self, task:ScheduledTaskRef){
-        self.ready_tasks.push(task);
-    }
-}
-type ReadyTasksManagerRef = std::rc::Rc<std::cell::RefCell<ReadyTasksManager>>;
-struct ReadyTaskObserver{
-    manager : ReadyTasksManagerRef,
-    subject_task : ScheduledTaskRef
-}
-
-impl ReadyTaskObserver{
-    fn new(manager:ReadyTasksManagerRef, subject_task:ScheduledTaskRef)-> ReadyTaskObserver{
-        ReadyTaskObserver{manager,subject_task}
-    }
-}
-
-impl Observer for ReadyTaskObserver{
-    fn notify(&mut self, from_state:&TaskState) {
-        match from_state{
-            TaskState::Ready => self.manager.borrow_mut().add(self.subject_task.clone()),
-            _ => ()
-        }
-    }
-}
 pub struct Scheduler{
     all_tasks : std::collections::HashMap<TaskId, ScheduledTaskRef>,
     last_id : TaskId,
@@ -58,7 +25,7 @@ impl Scheduler{
         }
     }
 
-    pub fn submit(&mut self, task : Box<dyn generaltask::GeneralTask>) -> TaskId{
+    pub fn submit(&mut self, task : Box<dyn task_declaration::TaskDeclaration>) -> TaskId{
         let id = self.last_id;
         self.last_id += 1;
         let dependencies: Vec<ScheduledTaskRef> = task.dependencies()

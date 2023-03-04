@@ -28,8 +28,8 @@ mod tests {
     #[test]
     fn test_build()
     {
-        let simptask = SimpleTask::new(&[], Box::new(|| println!("hehe!")));
-        let _schedtask = ScheduledTask::new(Box::new(simptask));
+        let simptask = SimpleTask::new(Box::new(|| println!("hehe!")));
+        let _schedtask = ScheduledTask::new(Box::new(simptask), &[]);
         // let depobs = EmptyDependencyObserver::new(std::rc::Rc::new(std::cell::RefCell::new(schedtask)));
     }
 }

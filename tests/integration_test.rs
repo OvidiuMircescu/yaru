@@ -5,16 +5,16 @@ fn newtask(message:&str, deps:&[newsched::TaskInfo], clown:&Rc<RefCell<String>>,
     let clown = clown.clone();
     let message = String::from(message);
     let func = move || clown.borrow_mut().push_str(&message);
-    let task = newsched::SimpleTask::new(&deps, Box::new(func));
-    sched.submit(Box::new(task))
+    let task = newsched::SimpleTask::new(Box::new(func));
+    sched.submit(Box::new(task), deps)
 }
 
 fn newtask_vec(message:&str, deps:&[newsched::TaskInfo], clown:&Rc<RefCell<Vec<String>>>, sched:&mut newsched::Scheduler ) ->newsched::TaskInfo{
     let clown = clown.clone();
     let message = String::from(message);
     let func = move || clown.borrow_mut().push(String::from(&message));
-    let task = newsched::SimpleTask::new(&deps, Box::new(func));
-    sched.submit(Box::new(task))
+    let task = newsched::SimpleTask::new(Box::new(func));
+    sched.submit(Box::new(task), deps)
 }
 
 #[test]

@@ -19,6 +19,9 @@ pub struct Scheduler{
     ready_tasks : ReadyTasksManagerRef
 }
 
+// pub type SchedulerRef = std::rc::Rc<std::cell::RefCell<Scheduler>>;
+// pub type SchedulerWeakRef = std::rc::Weak<std::cell::RefCell<Scheduler>>;
+
 impl Scheduler{
     pub fn new()-> Scheduler{
         Scheduler{
@@ -28,14 +31,17 @@ impl Scheduler{
         }
     }
 
-    pub fn submit(&mut self, task : Box<dyn task_declaration::TaskDeclaration>) -> TaskInfo{
+    pub fn submit(&mut self,
+                  task : Box<dyn task_declaration::TaskDeclaration>,
+                  dependencies : &[TaskInfo]
+                 ) -> TaskInfo{
         let id = self.last_id;
         self.last_id += 1;
-        let dependencies = task.dependencies().clone();
-        let new_task = ScheduledTask::new(task);
+        // let dependencies = task.dependencies().clone();
+        let new_task = ScheduledTask::new(task, dependencies);
         let new_task = std::rc::Rc::new(std::cell::RefCell::new(new_task));
         self.all_tasks.insert(id, new_task.clone());
-        for mut dep_task in dependencies.into_iter(){
+        for dep_task in dependencies.into_iter(){
             let observer = Box::new(DependencyObserver::new(new_task.clone()));
             dep_task.register(observer);
         }
@@ -63,9 +69,9 @@ mod tests {
     #[test]
     fn test_memory()
     {
-        let simptask = SimpleTask::new(&[], Box::new(|| println!("hehe!")));
+        let simptask = SimpleTask::new(Box::new(|| println!("hehe!")));
         let mut sched = Scheduler::new();
-        sched.submit(Box::new(simptask));
+        sched.submit(Box::new(simptask), &[]);
         assert_eq!(1, sched.all_tasks.len());
         sched.start();
         assert_eq!(1, sched.all_tasks.len());

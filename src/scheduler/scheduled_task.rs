@@ -33,8 +33,10 @@ pub struct ScheduledTask{
 }
 
 impl ScheduledTask{
-    pub fn new(task : Box<dyn task_declaration::TaskDeclaration>)-> ScheduledTask{
-        let number_of_dependencies = task.dependencies().len();
+    pub fn new(task : Box<dyn task_declaration::TaskDeclaration>,
+               dependencies : &[super::task_info::TaskInfo]
+              )-> ScheduledTask{
+        let number_of_dependencies = dependencies.len();
         ScheduledTask{
             task,
             // id,

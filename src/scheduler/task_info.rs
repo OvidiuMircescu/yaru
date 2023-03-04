@@ -10,7 +10,7 @@ impl TaskInfo{
     pub fn new(followed_task : ScheduledTaskRef) -> TaskInfo{
         TaskInfo{followed_task}
     }
-    pub fn register(&mut self, obs: Box <dyn Observer>){
+    pub fn register(&self, obs: Box <dyn Observer>){
         self.followed_task.borrow_mut().register(obs);
     }
 }
@@ -33,9 +33,9 @@ mod tests {
     #[test]
     fn test_build()
     {
-        let simptask = SimpleTask::new(&[], Box::new(|| println!("hehe!")));
-        let schedtask = ScheduledTask::new(Box::new(simptask));
-        let mut info = TaskInfo::new(std::rc::Rc::new(std::cell::RefCell::new(schedtask)));
+        let simptask = SimpleTask::new(Box::new(|| println!("hehe!")));
+        let schedtask = ScheduledTask::new(Box::new(simptask), &[]);
+        let info = TaskInfo::new(std::rc::Rc::new(std::cell::RefCell::new(schedtask)));
         let state = std::rc::Rc::new(std::cell::RefCell::new(String::new()));
         let obs = Box::new(TestObserver{state :state.clone()});
         info.register(obs);

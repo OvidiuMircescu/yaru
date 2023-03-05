@@ -4,12 +4,14 @@ mod scheduled_task;
 use scheduled_task::*;
 
 mod observers;
-use observers::*;
+use observers::Observer;
 
 mod ready_task;
 use ready_task::*;
 
 mod task_info;
+mod task_execution;
+mod state;
 
 pub type TaskId = usize;
 pub type TaskInfo = task_info::TaskInfo;
@@ -37,12 +39,11 @@ impl Scheduler{
                  ) -> TaskInfo{
         let id = self.last_id;
         self.last_id += 1;
-        // let dependencies = task.dependencies().clone();
         let new_task = ScheduledTask::new(task, dependencies);
         let new_task = std::rc::Rc::new(std::cell::RefCell::new(new_task));
         self.all_tasks.insert(id, new_task.clone());
         for dep_task in dependencies.into_iter(){
-            let observer = Box::new(DependencyObserver::new(new_task.clone()));
+            let observer = Box::new(observers::DependencyObserver::new(new_task.clone()));
             dep_task.register(observer);
         }
         let obs:Box <dyn Observer> = Box::new(
@@ -55,7 +56,7 @@ impl Scheduler{
         let mut ready_tasks = self.ready_tasks.borrow_mut().take();
         while !ready_tasks.is_empty() {
             for task in ready_tasks{
-                task.borrow_mut().run();
+                task.borrow_mut().run(self);
             }
             ready_tasks = self.ready_tasks.borrow_mut().take();
         }

@@ -1,16 +1,17 @@
-use super::scheduled_task::*;
+use super::scheduled_task;
+use super::observers;
 
 /// Public interface to a scheduled task.
 #[derive(Clone)]
 pub struct TaskInfo{
-    followed_task : ScheduledTaskRef
+    followed_task : scheduled_task::ScheduledTaskRef
 }
 
 impl TaskInfo{
-    pub fn new(followed_task : ScheduledTaskRef) -> TaskInfo{
+    pub fn new(followed_task : scheduled_task::ScheduledTaskRef) -> TaskInfo{
         TaskInfo{followed_task}
     }
-    pub fn register(&self, obs: Box <dyn Observer>){
+    pub fn register(&self, obs: Box <dyn observers::Observer>){
         self.followed_task.borrow_mut().register(obs);
     }
 }
@@ -18,13 +19,15 @@ impl TaskInfo{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::task_declaration::SimpleTask;
+    use crate::scheduler::state;
+    use crate::task_declaration;
+    use crate::scheduler;
     struct TestObserver{
         pub state : std::rc::Rc<std::cell::RefCell<String>>
     }
 
-    impl Observer for TestObserver{
-        fn notify(&mut self, from:&TaskState) {
+    impl observers::Observer for TestObserver{
+        fn notify(&mut self, from:&state::TaskState) {
             self.state.borrow_mut().clear();
             self.state.borrow_mut().push_str(&from.to_string());
         }
@@ -33,8 +36,8 @@ mod tests {
     #[test]
     fn test_build()
     {
-        let simptask = SimpleTask::new(Box::new(|| println!("hehe!")));
-        let schedtask = ScheduledTask::new(Box::new(simptask), &[]);
+        let simptask = task_declaration::SimpleTask::new(Box::new(|| println!("hehe!")));
+        let schedtask = scheduler::ScheduledTask::new(Box::new(simptask), &[]);
         let info = TaskInfo::new(std::rc::Rc::new(std::cell::RefCell::new(schedtask)));
         let state = std::rc::Rc::new(std::cell::RefCell::new(String::new()));
         let obs = Box::new(TestObserver{state :state.clone()});

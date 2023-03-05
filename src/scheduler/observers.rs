@@ -1,11 +1,16 @@
-use super::scheduled_task::*;
+// use super::scheduled_task::*;
+use super::state;
+
+pub trait Observer {
+    fn notify(&mut self, from:&state::TaskState);
+}
 
 pub struct DependencyObserver{
-    observer : ScheduledTaskWeakRef,
+    observer : super::scheduled_task::ScheduledTaskWeakRef,
 }
 
 impl DependencyObserver{
-    pub fn new(observer: ScheduledTaskRef)->DependencyObserver{
+    pub fn new(observer: super::scheduled_task::ScheduledTaskRef)->DependencyObserver{
         DependencyObserver {
             observer : std::rc::Rc::downgrade(&observer)
         }
@@ -13,7 +18,7 @@ impl DependencyObserver{
 }
 
 impl Observer for DependencyObserver{
-    fn notify(&mut self, from:&TaskState) {
+    fn notify(&mut self, from:&state::TaskState) {
         if let Some(obs) = self.observer.upgrade(){
             obs.borrow_mut().notify_from_dependency(from);
         }
@@ -23,7 +28,8 @@ impl Observer for DependencyObserver{
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
+    use crate::scheduler::scheduled_task::ScheduledTask;
     use crate::task_declaration::SimpleTask;
     #[test]
     fn test_build()

@@ -1,5 +1,5 @@
 use super::observers::Observer;
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TaskState{
     Waiting,
     Ready,
@@ -63,5 +63,11 @@ mod tests {
         assert!(t1 == t3);
         assert!(t1.to_string() == "Ready");
         assert!(t2.to_string() == "Done");
+        assert!(t1 < t2);
+        assert!(TaskState::Waiting <= TaskState::Waiting );
+        assert!(TaskState::Waiting <= TaskState::Ready );
+        assert!(TaskState::Waiting < TaskState::Running );
+        assert!(TaskState::Waiting < TaskState::Done );
+        assert!(TaskState::Done > TaskState::Running );
     }
 }

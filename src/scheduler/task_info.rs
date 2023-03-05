@@ -37,7 +37,7 @@ mod tests {
     fn test_build()
     {
         let simptask = task_declaration::SimpleTask::new(Box::new(|| println!("hehe!")));
-        let schedtask = scheduler::ScheduledTask::new(Box::new(simptask), &[]);
+        let schedtask = scheduler::ScheduledTask::new(task_declaration::TaskDeclaration::Simple(simptask), &[]);
         let info = TaskInfo::new(std::rc::Rc::new(std::cell::RefCell::new(schedtask)));
         let state = std::rc::Rc::new(std::cell::RefCell::new(String::new()));
         let obs = Box::new(TestObserver{state :state.clone()});

@@ -6,7 +6,7 @@ fn newtask(message:&str, deps:&[newsched::TaskInfo], clown:&Rc<RefCell<String>>,
     let message = String::from(message);
     let func = move || clown.borrow_mut().push_str(&message);
     let task = newsched::SimpleTask::new(Box::new(func));
-    sched.submit(Box::new(task), deps)
+    sched.submit(newsched::TaskDeclaration::Simple(task), deps)
 }
 
 fn newtask_vec(message:&str, deps:&[newsched::TaskInfo], clown:&Rc<RefCell<Vec<String>>>, sched:&mut newsched::Scheduler ) ->newsched::TaskInfo{
@@ -14,7 +14,7 @@ fn newtask_vec(message:&str, deps:&[newsched::TaskInfo], clown:&Rc<RefCell<Vec<S
     let message = String::from(message);
     let func = move || clown.borrow_mut().push(String::from(&message));
     let task = newsched::SimpleTask::new(Box::new(func));
-    sched.submit(Box::new(task), deps)
+    sched.submit(newsched::TaskDeclaration::Simple(task), deps)
 }
 
 #[test]
@@ -122,3 +122,47 @@ fn chain(){
     }
 }
 
+#[test]
+fn bloc_after_bloc(){
+    let result = Rc::new(RefCell::new(Vec::new()));
+    let mut sched = newsched::Scheduler::new();
+    let mut bloc1: Vec<newsched::TaskDeclaration> = Vec::new();
+    let mut res1 = Vec::new();
+
+    for it in 1..=5{
+        let message = format!("B1 T{}", it);
+        res1.push(String::from(&message));
+        let clown = result.clone();
+        let func = move || clown.borrow_mut().push(String::from(&message));
+        let task = newsched::SimpleTask::new(Box::new(func));
+        bloc1.push(newsched::TaskDeclaration::Simple(task));
+    }
+
+    let mut bloc2: Vec<newsched::TaskDeclaration> = Vec::new();
+    let mut res2 = Vec::new();
+    for it in 6..=10{
+        let message = format!("B2 T{}", it);
+        res2.push(String::from(&message));
+        let clown = result.clone();
+        let func = move || clown.borrow_mut().push(String::from(&message));
+        let task = newsched::SimpleTask::new(Box::new(func));
+        bloc2.push(newsched::TaskDeclaration::Simple(task));
+    }
+
+    let info = sched.submit(newsched::TaskDeclaration::Bloc(bloc1), &[]);
+    sched.submit(newsched::TaskDeclaration::Bloc(bloc2), &[info]);
+    sched.start();
+
+    for t in &res1{
+        assert!(result.borrow().contains(t));
+        let idx = result.borrow().iter().position(|x| x == t).unwrap();
+        assert!(idx < 5);
+    }
+
+    for t in &res2{
+        assert!(result.borrow().contains(t));
+        let idx = result.borrow().iter().position(|x| x == t).unwrap();
+        assert!(idx >= 5);
+    }
+
+}

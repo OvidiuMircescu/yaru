@@ -1,5 +1,6 @@
-pub trait TaskDeclaration{
-    fn run(& self);
+pub enum TaskDeclaration{
+    Simple(SimpleTask),
+    Bloc(Vec<TaskDeclaration>)
 }
 
 type CallbackFunc = Box<dyn Fn()>;
@@ -13,11 +14,8 @@ impl SimpleTask
     pub fn new(callback : CallbackFunc) -> Self {
         SimpleTask {callback}
     }
-}
 
-impl TaskDeclaration for SimpleTask
-{
-    fn run(& self){
+    pub fn run(& self){
         (self.callback)();
     }
 }

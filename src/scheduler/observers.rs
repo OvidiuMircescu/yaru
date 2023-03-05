@@ -29,13 +29,13 @@ impl Observer for DependencyObserver{
 #[cfg(test)]
 mod tests {
     // use super::*;
-    use crate::scheduler::scheduled_task::ScheduledTask;
-    use crate::task_declaration::SimpleTask;
+    use crate::scheduler::scheduled_task;
+    use crate::task_declaration;
     #[test]
     fn test_build()
     {
-        let simptask = SimpleTask::new(Box::new(|| println!("hehe!")));
-        let _schedtask = ScheduledTask::new(Box::new(simptask), &[]);
+        let simptask = task_declaration::SimpleTask::new(Box::new(|| println!("hehe!")));
+        let _schedtask = scheduled_task::ScheduledTask::new(task_declaration::TaskDeclaration::Simple(simptask), &[]);
         // let depobs = EmptyDependencyObserver::new(std::rc::Rc::new(std::cell::RefCell::new(schedtask)));
     }
 }
